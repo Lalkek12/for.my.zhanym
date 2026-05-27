@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="index.html">Титулка</a>
+            <a href="story.html">Our moments💞</a>
+            <a href="image.html">Фоточки</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section class="gallery-hero reveal">
+            <h1>Наши фоточки 🤍</h1>
+            <p class="gallery-subtitle">
+                Наш маленький альбом фоточек)
+            </p>
+        </section>
+
+        <section class="cylinder-gallery reveal delay-1">
+            
+
+            <div class="scene" id="scene">
+                <div class="cylinder-shell top-shell"></div>
+                <div class="cylinder-shell bottom-shell"></div>
+
+                <div class="cylinder-stage">
+                    <div class="cylinder" id="cylinder"></div>
+                </div>
+            </div>
+        </section>
+
+       
+    </main>
+
+    <script>
+        const cylinder = document.getElementById('cylinder');
+        const scene = document.getElementById('scene');
+
+        const startNumber = 10;
+        const totalPhotos = 28;
+
+        const rows = 4; // 4 ряда
+        const columns = Math.ceil(totalPhotos / rows); // 7 колонок
+
+        let rotationY = -20;
+        let isDragging = false;
+        let startX = 0;
+        let startRotation = 0;
+        let autoSpin = true;
+
+        function createPhotos() {
+            cylinder.innerHTML = "";
+
+            const isMobile = window.innerWidth <= 520;
+            const cardSize = isMobile ? 92 : 125;
+            const radius = isMobile ? 150 : 250;
+            const verticalGap = isMobile ? 108 : 145;
+
+            const angleStep = 360 / columns;
+            const rowOffsets = [];
+
+            for (let r = 0; r < rows; r++) {
+                const centerOffset = (rows - 1) / 2;
+                rowOffsets.push((r - centerOffset) * verticalGap);
+            }
+
+            for (let i = 0; i < totalPhotos; i++) {
+                const photoNumber = startNumber + i;
+                const col = Math.floor(i / rows);
+                const row = i % rows;
+
+                const angle = col * angleStep;
+                const y = rowOffsets[row];
+
+                const tile = document.createElement('div');
+                tile.className = 'photo-tile';
+                tile.style.width = cardSize + 'px';
+                tile.style.height = cardSize + 'px';
+                tile.style.transform = `
+                    rotateY(${angle}deg)
+                    translateZ(${radius}px)
+                    translateY(${y}px)
+                `;
+
+                tile.innerHTML = `
+                    <img src="images/image${photoNumber}.jpg" alt="Фоточка ${photoNumber}">
+                `;
+
+                cylinder.appendChild(tile);
+            }
+
+            applyRotation();
+        }
+
+        function applyRotation() {
+            cylinder.style.transform = `rotateX(-4deg) rotateY(${rotationY}deg)`;
+        }
+
+        function pointerDown(clientX) {
+            isDragging = true;
+            autoSpin = false;
+            startX = clientX;
+            startRotation = rotationY;
+            cylinder.classList.add('dragging');
+        }
+
+        function pointerMove(clientX) {
+            if (!isDragging) return;
+            const dx = clientX - startX;
+            rotationY = startRotation + dx * 0.35;
+            applyRotation();
+        }
+
+        function pointerUp() {
+            isDragging = false;
+            cylinder.classList.remove('dragging');
+            setTimeout(() => {
+                autoSpin = true;
+            }, 1800);
+        }
+
+        scene.addEventListener('mousedown', (e) => {
+            pointerDown(e.clientX);
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            pointerMove(e.clientX);
+        });
+
+        window.addEventListener('mouseup', pointerUp);
+
+        scene.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 0) {
+                pointerDown(e.touches[0].clientX);
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                pointerMove(e.touches[0].clientX);
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchend', pointerUp);
+
+        function animate() {
+            if (autoSpin && !isDragging) {
+                rotationY += 0.12;
+                applyRotation();
+            }
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', createPhotos);
+
+        createPhotos();
+        animate();
+    </script>
+</body>
+</html>
